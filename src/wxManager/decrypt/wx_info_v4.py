@@ -10,15 +10,14 @@
 """
 
 import ctypes
-import multiprocessing
 import os.path
 
 import hmac
 import os
 import struct
 import time
+import threading
 from ctypes import wintypes
-from multiprocessing import freeze_support
 
 import pymem
 from Crypto.Protocol.KDF import PBKDF2
@@ -273,10 +272,27 @@ def verify_key(key: bytes, buffer: bytes, flag, result):
 
 
 def get_key_(keys, buf):
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() // 2)
-    results = pool.starmap(check_chunk, ((key, buf) for key in keys))
-    pool.close()
-    pool.join()
+    results = []
+    lock = threading.Lock()
+
+    def worker(key):
+        if finish_flag:
+            return
+        result = check_chunk(key, buf)
+        if result:
+            with lock:
+                results.append(result)
+
+    threads = []
+    for key in keys:
+        if finish_flag:
+            break
+        t = threading.Thread(target=worker, args=(key,))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
 
     for r in results:
         if r:
@@ -347,11 +363,24 @@ def get_key(pid, process_handle, buf):
         return (lst[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
     keys = []
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() // 2)
-    results = pool.starmap(get_key_inner, ((pid, process_info_) for process_info_ in
-                                           split_list(process_infos, min(len(process_infos), 40))))
-    pool.close()
-    pool.join()
+    lock = threading.Lock()
+    results = []
+
+    def worker(process_info_):
+        result = get_key_inner(pid, process_info_)
+        if result:
+            with lock:
+                results.append(result)
+
+    threads = []
+    for process_info_ in split_list(process_infos, min(len(process_infos), 40)):
+        t = threading.Thread(target=worker, args=(process_info_,))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
     for r in results:
         if r:
             keys += r
@@ -469,14 +498,17 @@ def dump_wechat_info_v4(pid) -> WeChatInfo | None:
     if not process_handle:
         print(f"无法打开进程 {pid}")
         return wechat_info
-    queue = multiprocessing.Queue()
-    process = multiprocessing.Process(target=worker, args=(pid, queue))
 
-    process.start()
+    nickname_result = [{}]
+    def get_nickname_worker():
+        nickname_result[0] = get_nickname(pid)
+
+    nickname_thread = threading.Thread(target=get_nickname_worker)
+    nickname_thread.start()
 
     wechat_info.wx_dir = get_wx_dir(process_handle)
-    # print(wx_dir_cnt)
     if not wechat_info.wx_dir:
+        nickname_thread.join()
         return wechat_info
     db_file_path = os.path.join(wechat_info.wx_dir, 'favorite', 'favorite_fts.db')
     if not os.path.exists(db_file_path):
@@ -487,12 +519,11 @@ def dump_wechat_info_v4(pid) -> WeChatInfo | None:
     ctypes.windll.kernel32.CloseHandle(process_handle)
     wechat_info.wxid = '_'.join(wechat_info.wx_dir.split('\\')[-3].split('_')[0:-1])
     wechat_info.wx_dir = '\\'.join(wechat_info.wx_dir.split('\\')[:-2])
-    process.join()  # 等待子进程完成
-    if not queue.empty():
-        nickname_info = queue.get()
-        wechat_info.nick_name = nickname_info.get('nick_name', '')
-        wechat_info.phone = nickname_info.get('phone', '')
-        wechat_info.account_name = nickname_info.get('account_name', '')
+    nickname_thread.join()
+    nickname_info = nickname_result[0]
+    wechat_info.nick_name = nickname_info.get('nick_name', '')
+    wechat_info.phone = nickname_info.get('phone', '')
+    wechat_info.account_name = nickname_info.get('account_name', '')
     if not wechat_info.key:
         wechat_info.errcode = 404
     else:
@@ -501,7 +532,6 @@ def dump_wechat_info_v4(pid) -> WeChatInfo | None:
 
 
 if __name__ == '__main__':
-    freeze_support()
     st = time.time()
     pm = pymem.Pymem("Weixin.exe")
     pid = pm.process_id
