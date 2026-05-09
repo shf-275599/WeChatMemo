@@ -100,6 +100,9 @@ class WeChatExporterGUI:
             self.output_dir.set(path)
 
     def auto_decrypt(self):
+        if hasattr(self, '_decrypting') and self._decrypting:
+            return
+        self._decrypting = True
         self.status_var.set("正在解密数据库...")
         self.root.update()
 
@@ -154,10 +157,12 @@ class WeChatExporterGUI:
                 abs_db_path = os.path.abspath(db_path)
                 self.root.after(0, lambda: self.db_dir.set(abs_db_path))
                 self.root.after(0, lambda: self.status_var.set(f"解密成功: {wxid}"))
+                self.root.after(0, lambda: setattr(self, '_decrypting', False))
 
             except Exception as e:
                 self.root.after(0, lambda: messagebox.showerror("解密失败", str(e)))
                 self.root.after(0, lambda: self.status_var.set("解密失败"))
+                self.root.after(0, lambda: setattr(self, '_decrypting', False))
 
         threading.Thread(target=do_decrypt, daemon=True).start()
 
@@ -262,6 +267,8 @@ class WeChatExporterGUI:
 
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
     root = tk.Tk()
     app = WeChatExporterGUI(root)
     root.mainloop()
