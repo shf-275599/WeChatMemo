@@ -37,13 +37,15 @@ WeChatChatExporter/
 
 1. 双击 `WeChatExporter.exe` 启动
 2. 点击 **「自动解密」** — 自动检测微信进程，提取密钥并解密数据库
-3. 点击 **「加载联系人」** — 显示所有联系人列表
-4. 在搜索框输入关键词筛选联系人
-5. 选择导出格式（HTML / TXT / DOCX / Excel / Markdown）
-6. 点击 **「开始导出」**
+3. 解密完成后，数据库路径会自动填入（如 `data/wxid_xxx/db_storage`）
+4. 点击 **「加载联系人」** — 显示所有联系人列表
+5. 在搜索框输入关键词筛选联系人
+6. 选择导出格式（HTML / TXT / DOCX / Excel / Markdown）
+7. 点击 **「开始导出」**
 
 如果已经解密过数据库，可以手动指定路径跳过步骤 2：
-- 数据库路径：`data/wxid_xxx/db_storage`
+- 点击 **「浏览」** 按钮选择数据库文件夹
+- 路径格式：`data/wxid_xxx/db_storage`
 
 ### 方式二：使用 Python 源码
 

@@ -133,7 +133,7 @@ class WeChatExporterGUI:
                 wxid = info['wxid']
                 wx_dir = info['wx_dir']
                 key = info['key']
-                output_dir = wxid
+                output_dir = os.path.join(BASE_DIR, 'data', wxid)
 
                 if version == 4:
                     xor_key = get_decode_code_v4(wx_dir)
@@ -151,9 +151,9 @@ class WeChatExporterGUI:
                 with open(os.path.join(db_path, 'info.json'), 'w', encoding='utf-8') as f:
                     json.dump(info_data, f, ensure_ascii=False, indent=4)
 
-                self.root.after(0, lambda: self.db_dir.set(db_path))
+                abs_db_path = os.path.abspath(db_path)
+                self.root.after(0, lambda: self.db_dir.set(abs_db_path))
                 self.root.after(0, lambda: self.status_var.set(f"解密成功: {wxid}"))
-                self.root.after(0, self.load_contacts)
 
             except Exception as e:
                 self.root.after(0, lambda: messagebox.showerror("解密失败", str(e)))
