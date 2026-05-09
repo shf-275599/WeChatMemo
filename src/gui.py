@@ -151,14 +151,24 @@ class WeChatExporterGUI:
                     infos = get_info_v3(version_list)
 
                 if not infos:
-                    self.root.after(0, lambda: messagebox.showerror("错误", "未找到微信进程，请确保微信已登录"))
+                    self.root.after(0, lambda: messagebox.showerror("解密失败",
+                        "未找到微信进程！\n\n"
+                        "请检查：\n"
+                        "1. 微信是否已登录（不是最小化，是真正登录状态）\n"
+                        "2. 微信是否正在运行\n"
+                        "3. 尝试重启微信后重试"))
                     self.root.after(0, lambda: self.status_var.set("解密失败"))
                     self.root.after(0, lambda: setattr(self, '_decrypting', False))
                     return
 
                 info = infos[0]
                 if info.errcode == 404:
-                    self.root.after(0, lambda: messagebox.showerror("错误", "未找到密钥，请重启微信后重试"))
+                    self.root.after(0, lambda: messagebox.showerror("解密失败",
+                        "未找到密钥！\n\n"
+                        "请检查：\n"
+                        "1. 微信版本是否 ≤ 4.0.3.36（更高版本不支持）\n"
+                        "2. 重启微信后重试\n"
+                        "3. 如需降级微信，详见 README"))
                     self.root.after(0, lambda: self.status_var.set("解密失败"))
                     self.root.after(0, lambda: setattr(self, '_decrypting', False))
                     return
@@ -204,6 +214,7 @@ class WeChatExporterGUI:
                     self.db_dir.set(abs_db_path)
                     add_recent_path(self.config, abs_db_path)
                     self.path_combo['values'] = self.config.get('recent_paths', [])
+                    messagebox.showinfo("解密成功", f"数据库解密成功！\n\n用户ID: {wxid}\n路径: {abs_db_path}\n\n请点击「加载联系人」按钮")
                     self.status_var.set(f"解密成功: {wxid}")
                     self._decrypting = False
 
@@ -219,7 +230,11 @@ class WeChatExporterGUI:
     def load_contacts(self):
         db_dir = self.db_dir.get()
         if not db_dir or not os.path.exists(db_dir):
-            messagebox.showwarning("提示", "请先选择或解密数据库")
+            messagebox.showwarning("提示",
+                "请先选择数据库路径！\n\n"
+                "操作步骤：\n"
+                "1. 点击「浏览」选择已解密的数据库文件夹\n"
+                "2. 或者点击「自动解密」自动检测微信并解密")
             return
 
         add_recent_path(self.config, db_dir)
@@ -232,7 +247,12 @@ class WeChatExporterGUI:
                 conn = DatabaseConnection(db_dir, self.db_version.get())
                 database = conn.get_interface()
                 if not database:
-                    self.root.after(0, lambda: messagebox.showerror("错误", "数据库初始化失败"))
+                    self.root.after(0, lambda: messagebox.showerror("加载失败",
+                        "数据库初始化失败！\n\n"
+                        "请检查：\n"
+                        "1. 路径是否正确（应选择 db_storage 或 Msg 文件夹）\n"
+                        "2. 微信版本是否匹配（4.0 选微信 4.0，3.x 选微信 3.x）\n"
+                        "3. 数据库是否已解密（未解密请先点击「自动解密」）"))
                     return
 
                 self.database = database
@@ -275,7 +295,11 @@ class WeChatExporterGUI:
     def start_export(self):
         sel = self.contact_list.curselection()
         if not sel:
-            messagebox.showwarning("提示", "请先选择一个联系人")
+            messagebox.showwarning("提示",
+                "请先选择一个联系人！\n\n"
+                "操作步骤：\n"
+                "1. 先点击「加载联系人」\n"
+                "2. 在左侧列表中点击选择要导出的联系人")
             return
 
         contact_info = self.filtered_contacts[sel[0]]
@@ -309,10 +333,20 @@ class WeChatExporterGUI:
                     group_members=None
                 )
                 exporter.start()
-                self.root.after(0, lambda: messagebox.showinfo("完成", f"导出成功!\n保存到: {os.path.abspath(output_dir)}"))
+                self.root.after(0, lambda: messagebox.showinfo("导出完成",
+                    f"聊天记录导出成功！\n\n"
+                    f"联系人: {contact_info['label']}\n"
+                    f"格式: {fmt}\n"
+                    f"保存到: {os.path.abspath(output_dir)}"))
                 self.root.after(0, lambda: self.status_var.set("导出完成"))
             except Exception as e:
-                self.root.after(0, lambda: messagebox.showerror("导出失败", str(e)))
+                self.root.after(0, lambda: messagebox.showerror("导出失败",
+                    f"导出失败！\n\n"
+                    f"错误信息: {str(e)}\n\n"
+                    f"请检查：\n"
+                    f"1. 输出路径是否有写入权限\n"
+                    f"2. 磁盘空间是否充足\n"
+                    f"3. 联系人是否有聊天记录"))
                 self.root.after(0, lambda: self.status_var.set("导出失败"))
 
         threading.Thread(target=do_export, daemon=True).start()
