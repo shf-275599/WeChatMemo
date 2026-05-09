@@ -138,6 +138,14 @@ class WeChatExporterGUI:
                 key = info['key']
                 output_dir = os.path.join(BASE_DIR, 'data', wxid)
 
+                if not os.path.exists(wx_dir):
+                    self.root.after(0, lambda: messagebox.showerror("错误", f"微信目录不存在: {wx_dir}"))
+                    self.root.after(0, lambda: self.status_var.set("解密失败"))
+                    self.root.after(0, lambda: setattr(self, '_decrypting', False))
+                    return
+
+                os.makedirs(output_dir, exist_ok=True)
+
                 if version == 4:
                     xor_key = get_decode_code_v4(wx_dir)
                     decrypt_v4.decrypt_db_files(key, src_dir=wx_dir, dest_dir=output_dir)
@@ -145,6 +153,12 @@ class WeChatExporterGUI:
                 else:
                     decrypt_v3.decrypt_db_files(key, src_dir=wx_dir, dest_dir=output_dir)
                     db_path = os.path.join(output_dir, 'Msg')
+
+                if not os.path.exists(db_path):
+                    self.root.after(0, lambda: messagebox.showerror("错误", f"解密失败，数据库路径不存在: {db_path}"))
+                    self.root.after(0, lambda: self.status_var.set("解密失败"))
+                    self.root.after(0, lambda: setattr(self, '_decrypting', False))
+                    return
 
                 me = Me()
                 me.wx_dir = wx_dir
