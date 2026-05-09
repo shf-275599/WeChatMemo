@@ -123,8 +123,7 @@ class WeChatExporterGUI:
         self.status_var = tk.StringVar(value="就绪")
         ttk.Label(self.root, textvariable=self.status_var, relief="sunken", anchor="w").pack(fill="x", side="bottom", padx=10, pady=(0, 10))
 
-    def update_progress(self, progress):
-        percent = progress * 100
+    def update_progress(self, percent):
         self.progress_var.set(percent)
         self.progress_label.config(text=f"{percent:.1f}%")
         self.root.update_idletasks()
