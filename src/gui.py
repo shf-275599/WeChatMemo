@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 import sys
 import json
 import threading
-import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
@@ -19,6 +17,30 @@ from wxManager import DatabaseConnection, MessageType
 from exporter import HtmlExporter, TxtExporter, AiTxtExporter, DocxExporter, MarkdownExporter, ExcelExporter
 from exporter.config import FileType
 
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
+MAX_RECENT = 5
+
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {'recent_paths': [], 'output_dir': os.path.join(BASE_DIR, 'output')}
+
+
+def save_config(config):
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+
+
+def add_recent_path(config, path):
+    paths = config.get('recent_paths', [])
+    if path in paths:
+        paths.remove(path)
+    paths.insert(0, path)
+    config['recent_paths'] = paths[:MAX_RECENT]
+    save_config(config)
+
 
 class WeChatExporterGUI:
     def __init__(self, root):
@@ -27,12 +49,13 @@ class WeChatExporterGUI:
         self.root.geometry("700x580")
         self.root.resizable(False, False)
 
+        self.config = load_config()
         self.database = None
         self.contacts = []
         self.filtered_contacts = []
         self.db_dir = tk.StringVar()
         self.db_version = tk.IntVar(value=4)
-        self.output_dir = tk.StringVar(value=os.path.join(BASE_DIR, "output"))
+        self.output_dir = tk.StringVar(value=self.config.get('output_dir', os.path.join(BASE_DIR, 'output')))
         self.export_format = tk.StringVar(value="HTML")
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", self.filter_contacts)
@@ -46,7 +69,8 @@ class WeChatExporterGUI:
         db_frame.pack(fill="x", **pad)
 
         ttk.Label(db_frame, text="路径:").grid(row=0, column=0, sticky="w")
-        ttk.Entry(db_frame, textvariable=self.db_dir, width=50).grid(row=0, column=1, sticky="ew", padx=5)
+        self.path_combo = ttk.Combobox(db_frame, textvariable=self.db_dir, values=self.config.get('recent_paths', []), width=50)
+        self.path_combo.grid(row=0, column=1, sticky="ew", padx=5)
         ttk.Button(db_frame, text="浏览", command=self.browse_db).grid(row=0, column=2)
         ttk.Button(db_frame, text="自动解密", command=self.auto_decrypt).grid(row=0, column=3, padx=5)
 
@@ -93,11 +117,15 @@ class WeChatExporterGUI:
         path = filedialog.askdirectory(title="选择解密后的数据库文件夹")
         if path:
             self.db_dir.set(path)
+            add_recent_path(self.config, path)
+            self.path_combo['values'] = self.config.get('recent_paths', [])
 
     def browse_output(self):
         path = filedialog.askdirectory(title="选择输出文件夹")
         if path:
             self.output_dir.set(path)
+            self.config['output_dir'] = path
+            save_config(self.config)
 
     def auto_decrypt(self):
         if hasattr(self, '_decrypting') and self._decrypting:
@@ -125,12 +153,14 @@ class WeChatExporterGUI:
                 if not infos:
                     self.root.after(0, lambda: messagebox.showerror("错误", "未找到微信进程，请确保微信已登录"))
                     self.root.after(0, lambda: self.status_var.set("解密失败"))
+                    self.root.after(0, lambda: setattr(self, '_decrypting', False))
                     return
 
                 info = infos[0]
                 if info.errcode == 404:
                     self.root.after(0, lambda: messagebox.showerror("错误", "未找到密钥，请重启微信后重试"))
                     self.root.after(0, lambda: self.status_var.set("解密失败"))
+                    self.root.after(0, lambda: setattr(self, '_decrypting', False))
                     return
 
                 wxid = info.wxid
@@ -169,9 +199,15 @@ class WeChatExporterGUI:
                     json.dump(info_data, f, ensure_ascii=False, indent=4)
 
                 abs_db_path = os.path.abspath(db_path)
-                self.root.after(0, lambda: self.db_dir.set(abs_db_path))
-                self.root.after(0, lambda: self.status_var.set(f"解密成功: {wxid}"))
-                self.root.after(0, lambda: setattr(self, '_decrypting', False))
+
+                def update_ui():
+                    self.db_dir.set(abs_db_path)
+                    add_recent_path(self.config, abs_db_path)
+                    self.path_combo['values'] = self.config.get('recent_paths', [])
+                    self.status_var.set(f"解密成功: {wxid}")
+                    self._decrypting = False
+
+                self.root.after(0, update_ui)
 
             except Exception as e:
                 self.root.after(0, lambda: messagebox.showerror("解密失败", str(e)))
@@ -186,6 +222,8 @@ class WeChatExporterGUI:
             messagebox.showwarning("提示", "请先选择或解密数据库")
             return
 
+        add_recent_path(self.config, db_dir)
+        self.path_combo['values'] = self.config.get('recent_paths', [])
         self.status_var.set("正在加载联系人...")
         self.root.update()
 

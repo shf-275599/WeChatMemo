@@ -277,20 +277,20 @@ class HtmlExporter(ExporterBase):
 
         print('开始字符串转义')
         logger.info('开始字符串转义')
-        # 字符串转义，防止JS出现语法错误
-        html_data = []
-        for item in copy.deepcopy(html_json):
-            html_data.append(dict_to_js(item))
-
-        f.write(json.dumps(html_data, ensure_ascii=False, indent=4))
+        f.write(',')
+        f.write('"messages":')
+        first = True
+        for item in html_json:
+            if not first:
+                f.write(',')
+            first = False
+            f.write(json.dumps(dict_to_js(item), ensure_ascii=False))
+        f.write('}')
         for key, value in replace_map.items():
             html_end = html_end.replace(key, json.dumps(value))
 
         f.write(html_end)
         f.close()
-
-        with open(filename + '.json', 'w', encoding='utf-8') as f:
-            json.dump(html_json, f, ensure_ascii=False, indent=4)
 
         self.update_progress_callback(1)
         print(f"【完成导出 HTML {self.contact.remark}】{len(messages)}")
