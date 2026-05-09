@@ -1,0 +1,16 @@
+.vscode
+.idea
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+*.spec
+*.db
+*.bin
+*.log
+*.lnk
+data/
+output/
+*.exe
