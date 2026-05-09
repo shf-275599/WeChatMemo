@@ -108,10 +108,26 @@ class WeChatExporterGUI:
         ttk.Button(export_frame, text="浏览", command=self.browse_output).grid(row=0, column=4)
         export_frame.columnconfigure(3, weight=1)
 
+        progress_frame = ttk.Frame(self.root)
+        progress_frame.pack(fill="x", padx=10, pady=5)
+
+        self.progress_var = tk.DoubleVar(value=0)
+        self.progress_bar = ttk.Progressbar(progress_frame, variable=self.progress_var, maximum=100, length=400)
+        self.progress_bar.pack(fill="x", side="left", expand=True)
+
+        self.progress_label = ttk.Label(progress_frame, text="0%", width=6)
+        self.progress_label.pack(side="right", padx=(5, 0))
+
         ttk.Button(self.root, text="开始导出", command=self.start_export).pack(pady=10)
 
         self.status_var = tk.StringVar(value="就绪")
         ttk.Label(self.root, textvariable=self.status_var, relief="sunken", anchor="w").pack(fill="x", side="bottom", padx=10, pady=(0, 10))
+
+    def update_progress(self, progress):
+        percent = progress * 100
+        self.progress_var.set(percent)
+        self.progress_label.config(text=f"{percent:.1f}%")
+        self.root.update_idletasks()
 
     def browse_db(self):
         path = filedialog.askdirectory(title="选择解密后的数据库文件夹")
@@ -318,6 +334,8 @@ class WeChatExporterGUI:
 
         exporter_cls, file_type = exporter_map[fmt]
 
+        self.progress_var.set(0)
+        self.progress_label.config(text="0%")
         self.status_var.set(f"正在导出 {contact_info['label']} 的聊天记录...")
         self.root.update()
 
@@ -330,9 +348,12 @@ class WeChatExporterGUI:
                     type_=file_type,
                     message_types=None,
                     time_range=['2000-01-01 00:00:00', '2035-12-31 00:00:00'],
-                    group_members=None
+                    group_members=None,
+                    progress_callback=lambda p: self.root.after(0, lambda: self.update_progress(p))
                 )
                 exporter.start()
+                self.root.after(0, lambda: self.progress_var.set(100))
+                self.root.after(0, lambda: self.progress_label.config(text="100%"))
                 self.root.after(0, lambda: messagebox.showinfo("导出完成",
                     f"聊天记录导出成功！\n\n"
                     f"联系人: {contact_info['label']}\n"
