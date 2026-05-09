@@ -46,7 +46,7 @@ class WeChatExporterGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("微信聊天记录导出工具")
-        self.root.geometry("700x580")
+        self.root.geometry("700x620")
         self.root.resizable(False, False)
 
         self.config = load_config()
