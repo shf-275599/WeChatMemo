@@ -55,7 +55,16 @@ python src/gui.py
 如果已经解密过数据库，可以手动指定路径跳过步骤 1：
 - 数据库路径：`data/wxid_xxx/db_storage`
 
-### 3. 方式二：命令行操作
+### 3. 打包为 exe（可选）
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --name WeChatExporter src/gui.py
+```
+
+生成的 exe 在 `dist/WeChatExporter.exe`，双击即可运行，无需 Python 环境。
+
+### 4. 方式二：命令行操作
 
 **第一步：解密数据库**
 
@@ -99,15 +108,6 @@ python example/3-exporter.py
 ```
 
 导出的 HTML 文件在 `output/` 下，用浏览器打开即可查看。
-
-### 4. 打包为 exe
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile --name WeChatExporter src/gui.py
-```
-
-生成的 exe 在 `dist/WeChatExporter.exe`，双击即可运行，无需 Python 环境。
 
 ## 常见问题
 
