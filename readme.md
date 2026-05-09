@@ -33,38 +33,28 @@ WeChatChatExporter/
 
 ## 快速开始
 
-### 1. 安装依赖
+### 方式一：使用 exe（推荐）
+
+1. 双击 `WeChatExporter.exe` 启动
+2. 点击 **「自动解密」** — 自动检测微信进程，提取密钥并解密数据库
+3. 点击 **「加载联系人」** — 显示所有联系人列表
+4. 在搜索框输入关键词筛选联系人
+5. 选择导出格式（HTML / TXT / DOCX / Excel / Markdown）
+6. 点击 **「开始导出」**
+
+如果已经解密过数据库，可以手动指定路径跳过步骤 2：
+- 数据库路径：`data/wxid_xxx/db_storage`
+
+### 方式二：使用 Python 源码
 
 ```bash
 pip install -r requirements.txt
-```
-
-### 2. 方式一：GUI 可视化操作（推荐）
-
-```bash
 python src/gui.py
 ```
 
-操作流程：
-1. 点击 **「自动解密」** — 自动检测微信进程，提取密钥并解密数据库
-2. 点击 **「加载联系人」** — 显示所有联系人列表
-3. 在搜索框输入关键词筛选联系人
-4. 选择导出格式（HTML / TXT / DOCX / Excel / Markdown）
-5. 点击 **「开始导出」**
+操作流程同上。
 
-如果已经解密过数据库，可以手动指定路径跳过步骤 1：
-- 数据库路径：`data/wxid_xxx/db_storage`
-
-### 3. 打包为 exe（可选）
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile --name WeChatExporter src/gui.py
-```
-
-生成的 exe 在 `dist/WeChatExporter.exe`，双击即可运行，无需 Python 环境。
-
-### 4. 方式二：命令行操作
+### 方式三：命令行操作
 
 **第一步：解密数据库**
 
