@@ -341,6 +341,10 @@ class WeChatExporterGUI:
 
         def do_export():
             try:
+                def progress_callback(progress):
+                    percent = progress * 70
+                    self.root.after(0, lambda: self.update_progress(percent))
+
                 exporter = exporter_cls(
                     self.database,
                     contact,
@@ -349,11 +353,11 @@ class WeChatExporterGUI:
                     message_types=None,
                     time_range=['2000-01-01 00:00:00', '2035-12-31 00:00:00'],
                     group_members=None,
-                    progress_callback=lambda p: self.root.after(0, lambda: self.update_progress(p))
+                    progress_callback=progress_callback
                 )
+                self.root.after(0, lambda: self.status_var.set("正在解析消息..."))
                 exporter.start()
-                self.root.after(0, lambda: self.progress_var.set(100))
-                self.root.after(0, lambda: self.progress_label.config(text="100%"))
+                self.root.after(0, lambda: self.update_progress(100))
                 self.root.after(0, lambda: messagebox.showinfo("导出完成",
                     f"聊天记录导出成功！\n\n"
                     f"联系人: {contact_info['label']}\n"
