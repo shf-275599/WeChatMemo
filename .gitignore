@@ -13,4 +13,5 @@ build
 *.lnk
 data/
 output/
+logs/
 *.exe

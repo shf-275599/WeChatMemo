@@ -1,6 +1,6 @@
 # WeChatChatExporter
 
-微信聊天记录导出工具，支持 GUI 可视化操作和命令行批量导出。
+微信聊天记录导出工具，支持 GUI 可视化操作。
 
 基于 [CosilC/WeChatMsgArchive](https://github.com/CosilC/WeChatMsgArchive) 整理优化。
 
@@ -22,109 +22,162 @@ WeChatChatExporter/
 ├── example/              # 命令行示例脚本
 ├── doc/                  # 文档
 ├── data/                 # 解密后的数据库（git 忽略）
-└── output/               # 导出结果（git 忽略）
+├── output/               # 导出结果（git 忽略）
+└── logs/                 # 日志文件（git 忽略）
 ```
 
 ## 环境要求
 
 - Windows 10 / 11
-- Python 3.8+
 - 微信已登录
+- 微信版本 ≤ 4.0.3.36（更高版本需要降级，见下方说明）
 
-## 快速开始
+## 快速开始（小白教程）
 
-### 方式一：使用 exe（推荐）
+### 第一步：下载程序
 
-1. 双击 `WeChatExporter.exe` 启动
-2. 选择数据库路径：
-   - 点击 **「浏览」** 按钮选择已解密的数据库文件夹（如 `data/wxid_xxx/db_storage`）
-   - 或者点击 **「自动解密」** 自动检测微信进程并解密，路径会自动填入
-3. 点击 **「加载联系人」** — 显示所有联系人列表
-4. 在搜索框输入关键词筛选联系人
-5. 选择导出格式（HTML / TXT / DOCX / Excel / Markdown）
-6. 点击 **「开始导出」**
+1. 点击右侧 [Releases](https://github.com/shf-275599/WeChatChatExporter/releases) 下载最新版
+2. 解压到任意文件夹（比如 `D:\WeChatExporter`）
+3. 双击 `WeChatExporter.exe` 启动
 
-### 方式二：使用 Python 源码
+### 第二步：确认微信版本
 
-```bash
-pip install -r requirements.txt
-python src/gui.py
-```
+打开微信 → 点击左下角「设置」→ 关于微信 → 查看版本号
 
-操作流程同上。
+| 版本 | 能否使用 |
+|------|---------|
+| 4.0.3.36 及以下 | ✅ 直接使用 |
+| 4.0.3.39 ~ 4.1.x | ❌ 需要降级（见下方） |
 
-### 方式三：命令行操作
+**如果你的版本太高，需要降级：**
 
-**第一步：解密数据库**
+1. 下载 [WeChatWin_4.0.3.36.exe](https://github.com/iibob/wechat-win-archive/releases/tag/v4.0.3.36)
+2. **不要卸载现有微信**，直接运行下载的安装包覆盖安装
+3. 安装完成后重新登录微信
+
+### 第三步：自动解密数据库
+
+1. **确保微信已登录**（必须在登录状态）
+2. 打开 `WeChatExporter.exe`
+3. 选择版本：**微信 4.0**（默认）
+4. 点击 **「自动解密」** 按钮
+5. 等待解密完成（通常 1-2 分钟）
+6. 完成后会显示「解密成功: wxid_xxx」
+
+> ⚠️ **如果解密失败：**
+> - 确认微信已登录
+> - 重启微信后重试
+> - 检查微信版本是否 ≤ 4.0.3.36
+
+### 第四步：加载联系人
+
+1. 解密成功后，路径会自动填入
+2. 点击 **「加载联系人」** 按钮
+3. 等待加载完成，左侧会显示所有联系人列表
+
+### 第五步：选择联系人
+
+1. 在搜索框输入关键词可以筛选联系人
+2. 点击列表中的联系人名称选中它
+3. 群聊会显示 `[群]` 前缀
+
+### 第六步：导出聊天记录
+
+1. 选择导出格式：
+   - **HTML**：推荐，保留聊天界面样式，可直接用浏览器打开
+   - **TXT**：纯文本，体积小
+   - **DOCX**：Word 文档
+   - **Excel**：表格格式，适合数据分析
+   - **Markdown**：Markdown 格式
+2. 选择输出文件夹（默认是 `output` 文件夹）
+3. 点击 **「开始导出」**
+4. 等待导出完成
+5. 去输出文件夹查看导出的文件
+
+## 使用已有数据库
+
+如果你之前已经解密过数据库，可以直接使用：
+
+1. 点击 **「浏览」** 按钮
+2. 选择 `data/wxid_xxx/db_storage` 文件夹
+3. 点击 **「加载联系人」**
+4. 后续步骤同上
+
+## 命令行使用（进阶）
+
+### 解密数据库
 
 ```bash
 python example/1-decrypt.py
 ```
 
-- 微信 4.0：默认即可
-- 微信 3.x：修改脚本最后一行为 `dump_v3()`
+### 查看联系人
 
-运行后会在 `wxid_xxx/db_storage` 下生成解密后的数据库。
-
-**第二步：查看联系人**
-
-编辑 `example/2-contact.py`，修改以下变量：
-
-```python
-db_dir = './data/wxid_xxx/db_storage'  # 解密后的数据库路径
-db_version = 4  # 微信 4.0 填 4，3.x 填 3
-```
+编辑 `example/2-contact.py`，修改 `db_dir` 和 `db_version`，然后：
 
 ```bash
 python example/2-contact.py
 ```
 
-记下要导出的好友 wxid。
+### 导出聊天记录
 
-**第三步：导出聊天记录**
-
-编辑 `example/3-exporter.py`，修改以下变量：
-
-```python
-db_dir = './data/wxid_xxx/db_storage'  # 同上
-db_version = 4                          # 同上
-wxid = 'wxid_xxxxxx'                    # 要导出的好友 wxid
-output_dir = './output/'                # 输出文件夹
-```
+编辑 `example/3-exporter.py`，修改 `db_dir`、`db_version`、`wxid`，然后：
 
 ```bash
 python example/3-exporter.py
 ```
 
-导出的 HTML 文件在 `output/` 下，用浏览器打开即可查看。
-
 ## 常见问题
 
-### 微信版本兼容性
+### Q: 点击自动解密没反应 / 闪退？
 
-| 微信版本 | 密钥提取 | 说明 |
-|---------|---------|------|
-| 4.0.3.36 及以下 | ✅ 支持 | 推荐版本 |
-| 4.0.3.39 ~ 4.1.x | ❌ 不支持 | 密钥存储机制变更 |
+- 右键以管理员身份运行
+- 确保微信已登录且版本 ≤ 4.0.3.36
 
-如果你的微信版本过高无法提取密钥，需要降级到 4.0.3.36：
+### Q: 提示「未找到密钥」？
 
-- 下载地址：[WeChatWin_4.0.3.36.exe](https://github.com/iibob/wechat-win-archive/releases/tag/v4.0.3.36)
-- 旧版微信可以和新版共存，不需要卸载
+- 重启微信后重试
+- 确认微信版本 ≤ 4.0.3.36
 
-### 其他问题
+### Q: 提示「未找到微信进程」？
 
-- **闪退**：右键以管理员身份运行
-- **找不到密钥**：确保微信已登录，尝试重启微信
-- **杀毒软件报警**：程序无毒，手动放行即可
-- **遇到问题**：删除 `data/` 目录，重启微信，重新解密
+- 确保微信已登录（不是最小化，是真正登录状态）
+- 重启微信后重试
+
+### Q: 导出的 HTML 打开后图片不显示？
+
+- 需要在导出的文件夹中打开 HTML 文件（图片使用相对路径）
+
+### Q: 解密后想重新解密？
+
+- 删除 `data/wxid_xxx` 文件夹
+- 重新点击「自动解密」
+
+### Q: 杀毒软件报警？
+
+- 程序无毒，手动放行即可
+- 因为程序需要读取微信内存，部分杀毒软件会误报
+
+### Q: 支持 Mac / Linux 吗？
+
+- 不支持，仅支持 Windows
+
+## 从源码运行
+
+```bash
+# 安装依赖
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 运行 GUI
+python src/gui.py
+```
+
+## 许可证
+
+[MIT](./LICENSE)
 
 ## 致谢
 
 - [LC044/WeChatMsg](https://github.com/LC044/WeChatMsg) — 原项目
 - [iibob/wechat-win-archive](https://github.com/iibob/wechat-win-archive) — 微信历史版本存档
 - [xaoyaoo/PyWxDump](https://github.com/xaoyaoo/PyWxDump) — PC 微信工具
-
-## 许可证
-
-[MIT](./LICENSE)

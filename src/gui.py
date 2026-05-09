@@ -128,14 +128,14 @@ class WeChatExporterGUI:
                     return
 
                 info = infos[0]
-                if info.get('errcode') == 404:
+                if info.errcode == 404:
                     self.root.after(0, lambda: messagebox.showerror("错误", "未找到密钥，请重启微信后重试"))
                     self.root.after(0, lambda: self.status_var.set("解密失败"))
                     return
 
-                wxid = info['wxid']
-                wx_dir = info['wx_dir']
-                key = info['key']
+                wxid = info.wxid
+                wx_dir = info.wx_dir
+                key = info.key
                 output_dir = os.path.join(BASE_DIR, 'data', wxid)
 
                 if not os.path.exists(wx_dir):
@@ -163,7 +163,7 @@ class WeChatExporterGUI:
                 me = Me()
                 me.wx_dir = wx_dir
                 me.wxid = wxid
-                me.name = info.get('name', '')
+                me.name = info.nick_name or ''
                 info_data = me.to_json()
                 with open(os.path.join(db_path, 'info.json'), 'w', encoding='utf-8') as f:
                     json.dump(info_data, f, ensure_ascii=False, indent=4)
