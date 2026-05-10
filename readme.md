@@ -4,6 +4,8 @@
 
 基于 [CosilC/WeChatMsgArchive](https://github.com/CosilC/WeChatMsgArchive) 整理优化。
 
+![软件界面](doc/demo.png)
+
 ## 功能
 
 - 解密微信本地数据库（支持微信 3.x / 4.0）
