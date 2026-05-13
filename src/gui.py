@@ -42,7 +42,7 @@ def add_recent_path(config, path):
     save_config(config)
 
 
-class WeChatExporterGUI:
+class WeChatMemoGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("微信聊天记录导出工具")
@@ -380,5 +380,5 @@ if __name__ == "__main__":
     import multiprocessing
     multiprocessing.freeze_support()
     root = tk.Tk()
-    app = WeChatExporterGUI(root)
+    app = WeChatMemoGUI(root)
     root.mainloop()

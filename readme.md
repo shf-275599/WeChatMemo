@@ -1,4 +1,4 @@
-# WeChatChatExporter
+# WeChatMemo
 
 微信聊天记录导出工具，支持 GUI 可视化操作。
 
@@ -25,7 +25,7 @@
 ## 项目结构
 
 ```
-WeChatChatExporter/
+WeChatMemo/
 ├── src/
 │   ├── gui.py            # GUI 界面
 │   ├── wxManager/        # 核心模块（数据库读取、解密）
@@ -47,9 +47,9 @@ WeChatChatExporter/
 
 ### 第一步：下载程序
 
-1. 点击右侧 [Releases](https://github.com/shf-275599/WeChatChatExporter/releases) 下载最新版
-2. 解压到任意文件夹（比如 `D:\WeChatExporter`）
-3. 双击 `WeChatExporter.exe` 启动
+1. 点击右侧 [Releases](https://github.com/shf-275599/WeChatMemo/releases) 下载最新版
+2. 解压到任意文件夹（比如 `D:\WeChatMemo`）
+3. 双击 `WeChatMemo.exe` 启动
 
 ### 第二步：确认微信版本
 
@@ -69,7 +69,7 @@ WeChatChatExporter/
 ### 第三步：自动解密数据库
 
 1. **确保微信已登录**（必须在登录状态）
-2. 打开 `WeChatExporter.exe`
+2. 打开 `WeChatMemo.exe`
 3. 选择版本：**微信 4.0**（默认）
 4. 点击 **「自动解密」** 按钮
 5. 等待解密完成（通常 1-2 分钟）
